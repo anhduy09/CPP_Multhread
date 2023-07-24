@@ -171,5 +171,92 @@ Cache memory
  - Thread affinity
  + "Pin" a thread on a specific processor core
  
- ___________________________________________________________________________________________
+Managing a Thread
+
+Detaching a Thread
+- Instead of calling join(), we can call detach()
+	+ The parent thread will continue executing
+	+ The child thread will run until it completes
+	+ Or the program terminates
+	+ Analogous to "daemon" process
+- When an execution thread is detached
+	+ the std::thread object is no longer associated with it
+	+ The destructor will not call std::terminate()
+Exception in parent thread
+- The destructor are called for every object in scope
+	+ Including std::thread's destructor
+	+ This checks whether join() or detach() have been called
+	+ If neither, it calls std::terminate()
+- We must call either join() or detach() before the thread is destroyed
+	+ In all paths through the code
+- A better solution is to use the RAII idiom
+	+ wrap the std::thread object inside a class
+	+ The class's destructor calls join() on the std::thread object
+- A std::thread object can only be joined once
+- The joinable() member functionality
+	+ Returns false
+	+ If join() or detach() have already been called
+	+ Or if the thread object is not associated with an execution thread
+- Returns true if we need to call join()
+Code using RAII class
+- The destructos are called in reverse order
+	+ The thread_guard's destructor is called first
+	+ If necessary, it calls thr.join() and waits for the execution thread to finish
+	+ The thread_guard's std::thread member is then destroyed
+	+ It is not associated with exection thread
+	+ Its destructor does not call std::terminate()
+- This applies in normal execution	
+	+ And when an exception is thrown
+Stopping Threads
+- Execution threads can be interrupted or stopped
+	+ killed, cancelled, terminated
+- In general, abruptly terminating a thread is not a good idea
+- std::thread does not supporr this
+
+
+
+Multiple Threads
+
+
+- We can start multiple threads
+	//start 3 threads
+	std::thread thr1(hello);
+	std::thread thr2(hello);
+	std::thread thr3(hello);
+	
+	// wait for them to finish
+	thr1.join();
+	thr2.join();
+	thr3.join();
+Data Sharing Between Threads
+- The Threads in a program share the same memory space
+	+ It is very easy to share data between the threads
+- The only requirement is that the data is visible to the thread functions
+	+ global or static variable, for class member thread functions
+	+ Local variable captured by lambda expressions (by reference)
+- Threads interleave their execution
+- Threads can interfere with each others' actions
+- Modifying shared data can cause data corruption
+	+ This is the main source of bugs in concurrent program												<====================
+Data Race
+- A "data race" occurs when:
+	+ Two or more threads access the same memory loaction
+	+ And at least one of the threads modifies it
+	+ Potentially conflicting accesses to the same memory location
+- Only safe if the threads are synchronized
+	+ One thread accesses the memory location at a time
+	+ The other threads have to wait until it is safe for them to access it
+	+ In effect, the threads execute sequentially while they access it
+- A data race causes undefined behaviour
+	+ the program is not guaranteed to behace consistently
+- The outcome is affecte by timing changes
+	+ e.g One client clears a database table
+	+ Another client inserts an entry into the same table
+- A data race is special case of race condition
+	+ The outcome depends on when threads are scheduled to run
+	
+	
+
+
+
  
