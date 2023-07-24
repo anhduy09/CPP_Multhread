@@ -171,3 +171,5 @@ Cache memory
  - Thread affinity
  + "Pin" a thread on a specific processor core
  
+ ___________________________________________________________________________________________
+ 
